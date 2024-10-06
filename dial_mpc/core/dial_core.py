@@ -211,7 +211,7 @@ def main():
     # find env config
     env_config_type = dial_envs.get_config(dial_config.env_name)
     env_config = load_dataclass_from_dict(
-        env_config_type, config_dict, convert_list_to_array=True
+        env_config_type, config_dict, convert_list_to_array=False
     )
 
     print(emoji.emojize(":rocket:") + "Creating environment")
@@ -318,7 +318,7 @@ def main():
     xdata = jnp.array(xdata)
     jnp.save(os.path.join(dial_config.output_dir, f"{timestamp}_states"), data)
     jnp.save(os.path.join(dial_config.output_dir, f"{timestamp}_predictions"), xdata)
-
+    print(f"Saved rollout data: {dial_config.output_dir}")
     @app.route("/")
     def index():
         return webpage
