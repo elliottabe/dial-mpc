@@ -32,7 +32,7 @@ class FlyConfig(BaseEnvConfig):
     task_name: str = "fly"
     randomize_tasks: bool = False  # Whether to randomize the task.
     # P gain, or a list of P gains for each joint.
-    kp: float = 30.0
+    kp: float = 100.0
     # D gain, or a list of D gains for each joint.
     kd: float = 1.0
     debug: bool = True
@@ -54,10 +54,10 @@ class FlyConfig(BaseEnvConfig):
     bad_quat_dist: float = 1000.0 #1.25
     ctrl_cost_weight: float = 0.01
     pos_reward_weight: float = 0.0
-    quat_reward_weight: float = 0.0
-    joint_reward_weight: float = 1.0
+    quat_reward_weight: float = 1.0
+    joint_reward_weight: float = 10.0
     angvel_reward_weight: float = 1.0
-    bodypos_reward_weight: float = 0.0
+    bodypos_reward_weight: float = 1.0
     endeff_reward_weight: float = 0.0
     healthy_reward: float = 0.25
     healthy_z_range: tuple = (-0.05, 0.1)

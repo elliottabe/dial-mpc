@@ -320,9 +320,9 @@ def main():
     jnp.save(os.path.join(dial_config.output_dir, f"{timestamp}_predictions"), xdata)
     print(f"Saved rollout data: {dial_config.output_dir}")
     
+    os.environ["MUJOCO_GL"] = "osmesa"
     import mujoco
     import imageio
-    os.environ["MUJOCO_GL"] = "osmesa"
     scene_option = mujoco.MjvOption()
     scene_option.sitegroup[:] = [1, 1, 1, 1, 1, 0]
     scene_option.flags[mujoco.mjtVisFlag.mjVIS_CONTACTPOINT] = True
