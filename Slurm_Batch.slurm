@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#SBATCH --job-name=Fruitfly     ### Job Name
+#SBATCH --job-name=dial_mpc     ### Job Name
 #SBATCH --partition=ckpt-g2 ###  gpu ### ### Quality of Service (like a queue in PBS)
 #SBATCH --account=portia
 #SBATCH --time=2-00:00:00     ### Wall clock time limit in Days-HH:MM:SS
 #SBATCH --nodes=1             ### Node count required for the job
 #SBATCH --ntasks-per-node=1   ### Nuber of tasks to be launched per Node
 #SBATCH --cpus-per-task=16
-#SBATCH --gpus=4              ### General REServation of gpu:number of gpus
+#SBATCH --gpus=1              ### General REServation of gpu:number of gpus
 #SBATCH --mem=128G
 # #SBATCH --array=10 ###0-63 ###  ### Array index
 #SBATCH --verbose  

@@ -32,6 +32,8 @@ xla_flags = os.environ.get("XLA_FLAGS", "")
 xla_flags += " --xla_gpu_triton_gemm_any=True"
 os.environ["XLA_FLAGS"] = xla_flags
 
+n_gpus = jax.device_count(backend="gpu")
+print(f"Using {n_gpus} GPUs")
 
 def rollout_us(step_env, state, us):
     def step(state, u):
@@ -344,11 +346,11 @@ def main():
                 frames.append(pixels)
 
 
-    @app.route("/")
-    def index():
-        return webpage
+    # @app.route("/")
+    # def index():
+    #     return webpage
 
-    app.run(port=5000)
+    # app.run(port=5000)
 
 
 if __name__ == "__main__":
