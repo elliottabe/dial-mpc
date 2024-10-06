@@ -335,7 +335,7 @@ def main():
     mj_data = mujoco.MjData(mj_model)
     mujoco.mj_kinematics(mj_model, mj_data)
     renderer = mujoco.Renderer(mj_model, height=512, width=512)
-    qposes_rollout = jnp.array([state.pipeline_state.qpos for state in rollout])
+    qposes_rollout = jnp.array([state.qpos for state in rollout])
     frames = []
     with imageio.get_writer(video_path, fps=int((1.0 / env.dt))) as video:
         # with mujoco.Renderer(mj_model, height=512, width=512) as renderer:
