@@ -219,7 +219,7 @@ class Flybody(BaseEnv):
         
         
         mj_model = self.sys.mj_model
-        dpath = '/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
+        dpath = '/mmfs1/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
         ref_clip = ioh5.load(dpath)
         clip = ReferenceClip()
         for key, val in ref_clip.items():
@@ -338,7 +338,7 @@ class Flybody(BaseEnv):
         }
         return State(data, obs, reward, done, metrics, info)
     def make_system(self, config: FlyConfig) -> System:
-        model_path = ("/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fastball.xml")
+        model_path = ("/mmfs1/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
         sys = mjcf.load(model_path)
         sys = sys.tree_replace({"opt.timestep": config.timestep})
         # spec = mujoco.MjSpec()

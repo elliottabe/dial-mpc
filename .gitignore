@@ -253,3 +253,6 @@ AMENT_IGNORE
 
 dial_mpc_ws/
 flybody/
+OutFiles/
+
+*.ipynb

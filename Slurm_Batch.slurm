@@ -1,0 +1,32 @@
+#!/bin/bash
+
+#SBATCH --job-name=Fruitfly     ### Job Name
+#SBATCH --partition=ckpt-g2 ###  gpu ### ### Quality of Service (like a queue in PBS)
+#SBATCH --account=portia
+#SBATCH --time=2-00:00:00     ### Wall clock time limit in Days-HH:MM:SS
+#SBATCH --nodes=1             ### Node count required for the job
+#SBATCH --ntasks-per-node=1   ### Nuber of tasks to be launched per Node
+#SBATCH --cpus-per-task=16
+#SBATCH --gpus=4              ### General REServation of gpu:number of gpus
+#SBATCH --mem=128G
+# #SBATCH --array=10 ###0-63 ###  ### Array index
+#SBATCH --verbose  
+#SBATCH -o ./OutFiles/slurm-%A_%a.out
+
+##turn on e-mail notification
+#SBATCH --mail-type=ALL
+#SBATCH --mail-user=eabe@uw.edu
+
+module load cuda/12.2.2
+set -x
+
+source ~/.bashrc
+nvidia-smi
+conda activate stac-mjx-env
+cd /mmfs1/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/envs
+dial-mpc --config FlyConfig.yaml --custom-env test_env
+
+
+
+#### cancel all jobs: squeue -u $USER -h | awk '{print $1}' | xargs scancel
+### python scripts/slurm-run_bbrunton.py paths=hyak train=train_fly_run dataset=fly_run train.note=hyak train.num_envs=1024 gpu=0
