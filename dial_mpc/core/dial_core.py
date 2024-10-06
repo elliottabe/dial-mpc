@@ -319,6 +319,31 @@ def main():
     jnp.save(os.path.join(dial_config.output_dir, f"{timestamp}_states"), data)
     jnp.save(os.path.join(dial_config.output_dir, f"{timestamp}_predictions"), xdata)
     print(f"Saved rollout data: {dial_config.output_dir}")
+    
+    import mujoco
+    import imageio
+    os.environ["MUJOCO_GL"] = "osmesa"
+    scene_option = mujoco.MjvOption()
+    scene_option.sitegroup[:] = [1, 1, 1, 1, 1, 0]
+    scene_option.flags[mujoco.mjtVisFlag.mjVIS_CONTACTPOINT] = True
+    scene_option.flags[mujoco.mjtVisFlag.mjVIS_CONTACTFORCE] = True
+
+    video_path = os.path.join(dial_config.output_dir, f"{timestamp}_video.mp4")
+    mj_model = env.sys.mj_model
+    mj_data = mujoco.MjData(mj_model)
+    mujoco.mj_kinematics(mj_model, mj_data)
+    frames = []
+    with imageio.get_writer(video_path, fps=int((1.0 / env.dt))) as video:
+        with mujoco.Renderer(mj_model, height=512, width=512) as renderer:
+            for qpos1 in rollout:
+                mj_data.qpos = qpos1
+                mujoco.mj_forward(mj_model, mj_data)
+                renderer.update_scene(mj_data, camera=1, scene_option=scene_option)
+                pixels = renderer.render()
+                video.append_data(pixels)
+                frames.append(pixels)
+
+
     @app.route("/")
     def index():
         return webpage

@@ -308,13 +308,13 @@
   </asset>
 
   <worldbody>
-    <body name="ball" pos="-0.05 0 -0.55">
+    <!-- <body name="ball" pos="-0.05 0 -0.55">
       <joint name="ball" pos="0 0 0" type="ball" />
       <geom name="floor" size="0.454" density="0.1" material="ballsurface"/>
-    </body>
-    <!-- <geom name="floor" type="plane" size="5 5 .1" material="grid" pos="0 0 -.14"/> -->
+    </body> -->
+    <geom name="floor" type="plane" size="5 5 .1" material="grid" pos="0 0 -.14"/>
     <body name="thorax" childclass="body">
-      <!-- <freejoint name="free"/> -->
+      <freejoint name="free"/>
       <light name="right" mode="trackcom" pos="0 -1 1" dir="0 1 -1" diffuse="0.3 0.3 0.3"/>
       <camera name="track1" mode="trackcom" pos="0.6 0.6 0.22" quat="0.312 0.221 0.533 0.754"/>
       <camera name="track2" mode="trackcom" pos="0 -1.1 0.1" quat="0.707 0.707 0 0"/>
@@ -775,7 +775,7 @@
     <exclude name="wing_right_abdomen_2" body1="wing_right" body2="abdomen_2"/>
     <exclude name="wing_right_abdomen_3" body1="wing_right" body2="abdomen_3"/>
     <exclude name="wing_left_wing_right" body1="wing_left" body2="wing_right"/> -->
-    <!-- <exclude name="thorax_coxa_T1_left" body1="thorax" body2="coxa_T1_left"/>
+    <exclude name="thorax_coxa_T1_left" body1="thorax" body2="coxa_T1_left"/>
     <exclude name="thorax_coxa_T1_right" body1="thorax" body2="coxa_T1_right"/>
     <exclude name="thorax_coxa_T2_left" body1="thorax" body2="coxa_T2_left"/>
     <exclude name="thorax_coxa_T2_right" body1="thorax" body2="coxa_T2_right"/>
@@ -792,7 +792,7 @@
     <exclude name="coxa_T3_left_coxa_T3_right" body1="coxa_T3_left" body2="coxa_T3_right"/>
     <exclude name="coxa_T3_left_femur_T3_right" body1="coxa_T3_left" body2="femur_T3_right"/>
     <exclude name="femur_T3_left_coxa_T3_right" body1="femur_T3_left" body2="coxa_T3_right"/>
-    <exclude name="femur_T3_left_femur_T3_right" body1="femur_T3_left" body2="femur_T3_right"/> -->
+    <exclude name="femur_T3_left_femur_T3_right" body1="femur_T3_left" body2="femur_T3_right"/>
     <!-- <exclude name="rostrum_labrum_left" body1="rostrum" body2="labrum_left"/>
     <exclude name="rostrum_labrum_right" body1="rostrum" body2="labrum_right"/> -->
   </contact>
