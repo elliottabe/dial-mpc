@@ -334,16 +334,18 @@ def main():
     mj_model = env.sys.mj_model
     mj_data = mujoco.MjData(mj_model)
     mujoco.mj_kinematics(mj_model, mj_data)
+    renderer = mujoco.Renderer(mj_model, height=512, width=512)
+    qposes_rollout = jnp.array([state.pipeline_state.qpos for state in rollout])
     frames = []
     with imageio.get_writer(video_path, fps=int((1.0 / env.dt))) as video:
-        with mujoco.Renderer(mj_model, height=512, width=512) as renderer:
-            for qpos1 in rollout:
-                mj_data.qpos = qpos1
-                mujoco.mj_forward(mj_model, mj_data)
-                renderer.update_scene(mj_data, camera=1, scene_option=scene_option)
-                pixels = renderer.render()
-                video.append_data(pixels)
-                frames.append(pixels)
+        # with mujoco.Renderer(mj_model, height=512, width=512) as renderer:
+        for qpos1 in qposes_rollout:
+            mj_data.qpos = qpos1
+            mujoco.mj_forward(mj_model, mj_data)
+            renderer.update_scene(mj_data, camera=1, scene_option=scene_option)
+            pixels = renderer.render()
+            video.append_data(pixels)
+            frames.append(pixels)
 
 
     # @app.route("/")

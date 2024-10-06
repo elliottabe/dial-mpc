@@ -34,7 +34,7 @@ class FlyConfig(BaseEnvConfig):
     # P gain, or a list of P gains for each joint.
     kp: float = 100.0
     # D gain, or a list of D gains for each joint.
-    kd: float = 1.0
+    kd: float = 10.0
     debug: bool = True
     # dt of the environment step, not the underlying simulator step.
     dt: float = 0.002
@@ -46,7 +46,7 @@ class FlyConfig(BaseEnvConfig):
     clip_length: int = 601
     obs_noise: float = 0.05
     physics_steps_per_control_step: int = 10
-    action_scale: float = 1.0  # scale of the action space.
+    action_scale: float = 100.0  # scale of the action space.
     free_jnt: bool = True  # whether the first joint is free.
     mocap_hz: int = 200  # frequency of the mocap data.
     too_far_dist: float = 1000.0
@@ -219,8 +219,8 @@ class Flybody(BaseEnv):
         
         print(config)
         mj_model = self.sys.mj_model
-        dpath = '/mmfs1/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
-        # dpath = '/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
+        # dpath = '/mmfs1/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
+        dpath = '/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
         ref_clip = ioh5.load(dpath)
         clip = ReferenceClip()
         for key, val in ref_clip.items():
@@ -267,6 +267,7 @@ class Flybody(BaseEnv):
                 for body in config.end_eff_names
             ]
         )
+        self._action_scale = config.action_scale
         self._sim_timestep = config.timestep
         self._free_jnt = config.free_jnt
         self._inference_mode = config.inference_mode
@@ -339,8 +340,8 @@ class Flybody(BaseEnv):
         }
         return State(data, obs, reward, done, metrics, info)
     def make_system(self, config: FlyConfig) -> System:
-        # model_path = ("/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
-        model_path = ("/mmfs1/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
+        model_path = ("/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
+        # model_path = ("/mmfs1/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
         # sys = mjcf.load(model_path)
         # sys = sys.tree_replace({"opt.timestep": config.timestep})
         spec = mujoco.MjSpec()
@@ -367,7 +368,8 @@ class Flybody(BaseEnv):
     def step(self, state: State, action: jp.ndarray) -> State:
         """Runs one timestep of the environment's dynamics."""
         data0 = state.pipeline_state
-        data = self.pipeline_step(data0, action)
+        scaled_action = self._action_scale * action
+        data = self.pipeline_step(data0, scaled_action)
 
         info = state.info.copy()
 

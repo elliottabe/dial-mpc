@@ -40,7 +40,7 @@ timestep: 0.002
 backend: "mjx"  # backend of the environment.
 # control method for the joints, either "torque" or "position"
 leg_control: "torque"
-action_scale: 1.0  # scale of the action space.
+action_scale: 100.0  # scale of the action space.
 free_jnt: False
 inference_mode: False
 # Fly
