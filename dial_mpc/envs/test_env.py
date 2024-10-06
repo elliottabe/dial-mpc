@@ -48,15 +48,15 @@ class FlyConfig(BaseEnvConfig):
     physics_steps_per_control_step: int = 10
     action_scale: float = 1.0  # scale of the action space.
     free_jnt: bool = True  # whether the first joint is free.
-    mocap_hz: int = 250  # frequency of the mocap data.
-    too_far_dist: float = 0.1
+    mocap_hz: int = 200  # frequency of the mocap data.
+    too_far_dist: float = 1000.0
     bad_pose_dist: float = 1000.0 # 60.0
     bad_quat_dist: float = 1000.0 #1.25
     ctrl_cost_weight: float = 0.01
     pos_reward_weight: float = 0
-    quat_reward_weight: float = 1.0
-    joint_reward_weight: float = 50.0
-    angvel_reward_weight: float = 0.0
+    quat_reward_weight: float = 0.0
+    joint_reward_weight: float = 1.0
+    angvel_reward_weight: float = 1.0
     bodypos_reward_weight: float = 1.0
     endeff_reward_weight: float = 1.0
     healthy_reward: float = 0.25
@@ -338,7 +338,7 @@ class Flybody(BaseEnv):
         }
         return State(data, obs, reward, done, metrics, info)
     def make_system(self, config: FlyConfig) -> System:
-        model_path = ("/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
+        model_path = ("/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fastball.xml")
         sys = mjcf.load(model_path)
         sys = sys.tree_replace({"opt.timestep": config.timestep})
         # spec = mujoco.MjSpec()
