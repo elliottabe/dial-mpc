@@ -3,6 +3,7 @@ import time
 from dataclasses import dataclass
 import importlib
 import sys
+os.environ["MUJOCO_GL"] = "osmesa"
 
 import yaml
 import argparse
@@ -11,6 +12,8 @@ import matplotlib.pyplot as plt
 import scienceplots
 import art
 import emoji
+import mujoco
+import imageio
 
 import jax
 from jax import numpy as jnp
@@ -322,9 +325,37 @@ def main():
     jnp.save(os.path.join(dial_config.output_dir, f"{timestamp}_predictions"), xdata)
     print(f"Saved rollout data: {dial_config.output_dir}")
     
-    os.environ["MUJOCO_GL"] = "osmesa"
-    import mujoco
-    import imageio
+    log_rollout_videos(env_config, dial_config,env,rollout,state,timestamp)
+    # scene_option = mujoco.MjvOption()
+    # scene_option.sitegroup[:] = [1, 1, 1, 1, 1, 0]
+    # scene_option.flags[mujoco.mjtVisFlag.mjVIS_CONTACTPOINT] = True
+    # scene_option.flags[mujoco.mjtVisFlag.mjVIS_CONTACTFORCE] = True
+
+    # video_path = os.path.join(dial_config.output_dir, f"{timestamp}_video.mp4")
+    # mj_model = env.sys.mj_model
+    # mj_data = mujoco.MjData(mj_model)
+    # mujoco.mj_kinematics(mj_model, mj_data)
+    # renderer = mujoco.Renderer(mj_model, height=512, width=512)
+    # qposes_rollout = jnp.array([state.qpos for state in rollout])
+    # frames = []
+    # with imageio.get_writer(video_path, fps=int((1.0 / env.dt))) as video:
+    #     # with mujoco.Renderer(mj_model, height=512, width=512) as renderer:
+    #     for qpos1 in qposes_rollout:
+    #         mj_data.qpos = qpos1
+    #         mujoco.mj_forward(mj_model, mj_data)
+    #         renderer.update_scene(mj_data, camera=1, scene_option=scene_option)
+    #         pixels = renderer.render()
+    #         video.append_data(pixels)
+    #         frames.append(pixels)
+
+
+    # @app.route("/")
+    # def index():
+    #     return webpage
+
+    # app.run(port=5000)
+
+def log_rollout_videos(config,dial_config,env,rollout,state,timestamp): 
     scene_option = mujoco.MjvOption()
     scene_option.sitegroup[:] = [1, 1, 1, 1, 1, 0]
     scene_option.flags[mujoco.mjtVisFlag.mjVIS_CONTACTPOINT] = True
@@ -346,14 +377,93 @@ def main():
             pixels = renderer.render()
             video.append_data(pixels)
             frames.append(pixels)
+            
+            
 
+    def f(x):
+        if len(x.shape) != 1:
+            return jax.lax.dynamic_slice_in_dim(
+                x,
+                0,
+                config.clip_length,
+            )
+        return jnp.array([])
 
-    # @app.route("/")
-    # def index():
-    #     return webpage
+    ref_traj = jax.tree_util.tree_map(f, env._ref_traj)
+    
+    pair_mjcf = '/mmfs1/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_pair.xml'
+    repeats_per_frame = 1
+    spec = mujoco.MjSpec()
+    spec.from_file(pair_mjcf)
+    thorax0 = spec.find_body("thorax-0")
+    first_joint0 = thorax0.first_joint()
+    if (env._free_jnt == False) & ('free' in first_joint0.name):
+        qposes_ref = jnp.repeat(
+            ref_traj.joints,
+            repeats_per_frame,
+            axis=0,
+        )
+        first_joint0.delete()
+        thorax1 = spec.find_body("thorax-1")
+        first_joint1 = thorax1.first_joint()
+        first_joint1.delete()
+    elif env._free_jnt == True: 
+        # qposes_ref = np.hstack([ref_traj.position, ref_traj.quaternion, ref_traj.joints])
+        qposes_ref = jnp.repeat(
+            jnp.hstack([ref_traj.position, ref_traj.quaternion, ref_traj.joints]),
+            repeats_per_frame,
+            axis=0,
+        )
+        
+    mj_model = spec.compile()
 
-    # app.run(port=5000)
+    # mj_model = mujoco.MjModel.from_xml_path(config.dataset.rendering_mjcf)
 
+    mj_model.opt.solver = {
+        "cg": mujoco.mjtSolver.mjSOL_CG,
+        "newton": mujoco.mjtSolver.mjSOL_NEWTON,
+    }["cg"]
+    mj_model.opt.iterations = config.dataset.env_args.iterations
+    mj_model.opt.ls_iterations = config.dataset.env_args.ls_iterations
+    mj_model.opt.timestep = env.sys.mj_model.opt.timestep
+    
+    mj_data = mujoco.MjData(mj_model)
+    
+    site_names = [
+        mj_model.site(i).name
+        for i in range(mj_model.nsite)
+        if "-0" in mj_model.site(i).name
+    ]
+    site_id = [
+        mj_model.site(i).id
+        for i in range(mj_model.nsite)
+        if "-0" in mj_model.site(i).name
+    ]
+    for id in site_id:
+        mj_model.site(id).rgba = [1, 0, 0, 1]
 
+    scene_option = mujoco.MjvOption()
+    scene_option.sitegroup[:] = [1, 1, 1, 1, 1, 0]
+    scene_option.flags[mujoco.mjtVisFlag.mjVIS_CONTACTPOINT] = True
+    scene_option.flags[mujoco.mjtVisFlag.mjVIS_CONTACTFORCE] = True
+
+    # save rendering and log to wandb
+    mujoco.mj_kinematics(mj_model, mj_data)
+    # renderer = mujoco.Renderer(mj_model, height=512, width=512)
+
+    frames = []
+    # render while stepping using mujoco
+    video_path = os.path.join(dial_config.output_dir, f"{timestamp}_Paired_video.mp4")
+    with imageio.get_writer(video_path, fps=50) as video: #int((1.0 / env.dt))
+        with mujoco.Renderer(mj_model, height=512, width=512) as renderer:
+            for qpos1, qpos2 in zip(qposes_rollout, qposes_ref):
+                mj_data.qpos = jnp.append(qpos1, qpos2)
+                mujoco.mj_forward(mj_model, mj_data)
+                renderer.update_scene(mj_data, camera=1, scene_option=scene_option)
+                pixels = renderer.render()
+                video.append_data(pixels)
+                frames.append(pixels)
+    
+    
 if __name__ == "__main__":
     main()

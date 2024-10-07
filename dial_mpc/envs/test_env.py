@@ -46,7 +46,7 @@ class FlyConfig(BaseEnvConfig):
     clip_length: int = 601
     obs_noise: float = 0.05
     physics_steps_per_control_step: int = 10
-    action_scale: float = 100.0  # scale of the action space.
+    action_scale: float = 1000.0  # scale of the action space.
     free_jnt: bool = True  # whether the first joint is free.
     mocap_hz: int = 200  # frequency of the mocap data.
     too_far_dist: float = 1000.0
@@ -55,7 +55,7 @@ class FlyConfig(BaseEnvConfig):
     ctrl_cost_weight: float = 0.01
     pos_reward_weight: float = 0.0
     quat_reward_weight: float = 1.0
-    joint_reward_weight: float = 10.0
+    joint_reward_weight: float = 100.0
     angvel_reward_weight: float = 1.0
     bodypos_reward_weight: float = 1.0
     endeff_reward_weight: float = 0.0
@@ -219,8 +219,8 @@ class Flybody(BaseEnv):
         
         print(config)
         mj_model = self.sys.mj_model
-        # dpath = '/mmfs1/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
-        dpath = '/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
+        dpath = '/mmfs1/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
+        # dpath = '/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
         ref_clip = ioh5.load(dpath)
         clip = ReferenceClip()
         for key, val in ref_clip.items():
@@ -331,8 +331,8 @@ class Flybody(BaseEnv):
             "angvel_reward": zero,
             "bodypos_reward": zero,
             "endeff_reward": zero,
-            "reward_quadctrl": zero,
-            "reward_alive": zero,
+            "reward_ctrl": zero,
+            "healthy_reward": zero,
             "too_far": zero,
             "bad_pose": zero,
             "bad_quat": zero,
@@ -340,8 +340,8 @@ class Flybody(BaseEnv):
         }
         return State(data, obs, reward, done, metrics, info)
     def make_system(self, config: FlyConfig) -> System:
-        model_path = ("/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
-        # model_path = ("/mmfs1/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
+        # model_path = ("/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/mo/dels/fruitfly/fruitfly_force_fast.xml")
+        model_path = ("/mmfs1/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
         # sys = mjcf.load(model_path)
         # sys = sys.tree_replace({"opt.timestep": config.timestep})
         spec = mujoco.MjSpec()
@@ -439,12 +439,6 @@ class Flybody(BaseEnv):
         pos_reward = rewards_temp[0]
         # joint_reward = rewards_temp[1]
         quat_reward = rewards_temp[2]
-        # rewards = {
-        #     'pos_reward': rewards_temp[0],
-        #     'joint_reward': rewards_temp[1],
-        #     'quat_reward': rewards_temp[2],
-        # }
-        # reward = sum(rewards.values())
 
         reward = (
             pos_reward
@@ -477,8 +471,8 @@ class Flybody(BaseEnv):
             angvel_reward=angvel_reward,
             bodypos_reward=bodypos_reward,
             endeff_reward=endeff_reward,
-            reward_quadctrl=-ctrl_cost,
-            reward_alive=healthy_reward,
+            reward_ctrl=-ctrl_cost,
+            healthy_reward=healthy_reward,
             too_far=too_far,
             bad_pose=bad_pose,
             bad_quat=bad_quat,
