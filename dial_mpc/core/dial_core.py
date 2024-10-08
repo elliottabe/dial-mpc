@@ -234,6 +234,7 @@ def main():
     # Y0 = mbdpi.reverse(state_init, YN, rng_exp)
     Y0 = YN
 
+    print(dial_config)
     Nstep = dial_config.n_steps
     rews = []
     rews_plan = []
@@ -362,7 +363,20 @@ def log_rollout_videos(config,dial_config,env,rollout,state,timestamp):
     scene_option.flags[mujoco.mjtVisFlag.mjVIS_CONTACTFORCE] = True
 
     video_path = os.path.join(dial_config.output_dir, f"{timestamp}_video.mp4")
-    mj_model = env.sys.mj_model
+    mj_path = '/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml'
+    spec = mujoco.MjSpec()
+    spec.from_file(mj_path)
+    thorax0 = spec.find_body("thorax")
+    first_joint0 = thorax0.first_joint()
+    first_joint0.delete()
+    mj_model = spec.compile()
+    mj_model.opt.solver = {
+        "cg": mujoco.mjtSolver.mjSOL_CG,
+        "newton": mujoco.mjtSolver.mjSOL_NEWTON,
+    }["cg"]
+    mj_model.opt.iterations = config.iterations
+    mj_model.opt.ls_iterations = config.ls_iterations
+    mj_model.opt.timestep = env.sys.mj_model.opt.timestep
     mj_data = mujoco.MjData(mj_model)
     mujoco.mj_kinematics(mj_model, mj_data)
     renderer = mujoco.Renderer(mj_model, height=512, width=512)
@@ -391,29 +405,30 @@ def log_rollout_videos(config,dial_config,env,rollout,state,timestamp):
 
     ref_traj = jax.tree_util.tree_map(f, env._ref_traj)
     
-    pair_mjcf = '/mmfs1/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_pair.xml'
+    # pair_mjcf = '/mmfs1/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_pair.xml'
+    pair_mjcf = '/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_pair.xml'
     repeats_per_frame = 1
     spec = mujoco.MjSpec()
     spec.from_file(pair_mjcf)
     thorax0 = spec.find_body("thorax-0")
     first_joint0 = thorax0.first_joint()
-    if (env._free_jnt == False) & ('free' in first_joint0.name):
-        qposes_ref = jnp.repeat(
-            ref_traj.joints,
-            repeats_per_frame,
-            axis=0,
-        )
-        first_joint0.delete()
-        thorax1 = spec.find_body("thorax-1")
-        first_joint1 = thorax1.first_joint()
-        first_joint1.delete()
-    elif env._free_jnt == True: 
-        # qposes_ref = np.hstack([ref_traj.position, ref_traj.quaternion, ref_traj.joints])
-        qposes_ref = jnp.repeat(
-            jnp.hstack([ref_traj.position, ref_traj.quaternion, ref_traj.joints]),
-            repeats_per_frame,
-            axis=0,
-        )
+    first_joint0.delete()
+    # if (env._free_jnt == False) & ('free' in first_joint0.name):
+    #     qposes_ref = jnp.repeat(
+    #         ref_traj.joints,
+    #         repeats_per_frame,
+    #         axis=0,
+    #     )
+    thorax1 = spec.find_body("thorax-1")
+    first_joint1 = thorax1.first_joint()
+    first_joint1.delete()
+    # elif env._free_jnt == True: 
+    qposes_ref =  ref_traj.joints
+    #     qposes_ref = jnp.repeat(
+    #         jnp.hstack([ref_traj.position, ref_traj.quaternion, ref_traj.joints]),
+    #         repeats_per_frame,
+    #         axis=0,
+    #     )
         
     mj_model = spec.compile()
 
@@ -423,8 +438,8 @@ def log_rollout_videos(config,dial_config,env,rollout,state,timestamp):
         "cg": mujoco.mjtSolver.mjSOL_CG,
         "newton": mujoco.mjtSolver.mjSOL_NEWTON,
     }["cg"]
-    mj_model.opt.iterations = config.dataset.env_args.iterations
-    mj_model.opt.ls_iterations = config.dataset.env_args.ls_iterations
+    mj_model.opt.iterations = config.iterations
+    mj_model.opt.ls_iterations = config.ls_iterations
     mj_model.opt.timestep = env.sys.mj_model.opt.timestep
     
     mj_data = mujoco.MjData(mj_model)
@@ -455,11 +470,11 @@ def log_rollout_videos(config,dial_config,env,rollout,state,timestamp):
     # render while stepping using mujoco
     video_path = os.path.join(dial_config.output_dir, f"{timestamp}_Paired_video.mp4")
     with imageio.get_writer(video_path, fps=50) as video: #int((1.0 / env.dt))
-        with mujoco.Renderer(mj_model, height=512, width=512) as renderer:
+        with mujoco.Renderer(mj_model, height=512, width=512) as renderer2:
             for qpos1, qpos2 in zip(qposes_rollout, qposes_ref):
                 mj_data.qpos = jnp.append(qpos1, qpos2)
                 mujoco.mj_forward(mj_model, mj_data)
-                renderer.update_scene(mj_data, camera=1, scene_option=scene_option)
+                renderer2.update_scene(mj_data, camera=1, scene_option=scene_option)
                 pixels = renderer.render()
                 video.append_data(pixels)
                 frames.append(pixels)

@@ -32,33 +32,33 @@ class FlyConfig(BaseEnvConfig):
     task_name: str = "fly"
     randomize_tasks: bool = False  # Whether to randomize the task.
     # P gain, or a list of P gains for each joint.
-    kp: float = 100.0
+    kp: float = 50.0
     # D gain, or a list of D gains for each joint.
-    kd: float = 10.0
+    kd: float = 1.0
     debug: bool = True
     # dt of the environment step, not the underlying simulator step.
     dt: float = 0.002
     # timestep of the underlying simulator step. user is responsible for making sure it matches their model.
-    timestep: float = 0.002
+    timestep: float = 0.0002
     backend: str = "mjx"  # backend of the environment.
     # control method for the joints, either "torque" or "position"
     leg_control: str = "torque"
     clip_length: int = 601
     obs_noise: float = 0.05
     physics_steps_per_control_step: int = 10
-    action_scale: float = 1000.0  # scale of the action space.
+    action_scale: float = 1  # scale of the action space.
     free_jnt: bool = True  # whether the first joint is free.
     mocap_hz: int = 200  # frequency of the mocap data.
     too_far_dist: float = 1000.0
     bad_pose_dist: float = 20 # 60.0
-    bad_quat_dist: float = 1000.0 #1.25
+    bad_quat_dist: float = 80.0 #1.25
     ctrl_cost_weight: float = 0.01
     pos_reward_weight: float = 0.0
     quat_reward_weight: float = 1.0
-    joint_reward_weight: float = 100.0
+    joint_reward_weight: float = 10.0
     angvel_reward_weight: float = 1.0
     bodypos_reward_weight: float = 1.0
-    endeff_reward_weight: float = 0.0
+    endeff_reward_weight: float = 1.0
     healthy_reward: float = 0.25
     healthy_z_range: tuple = (-0.05, 0.1)
     terminate_when_unhealthy: bool = True
@@ -138,7 +138,8 @@ class FlyConfig(BaseEnvConfig):
     'tarsus2_T3_right',
     'tarsus3_T3_right',
     'tarsus4_T3_right',
-    'claw_T3_right',)
+    'claw_T3_right',
+    )
     
     site_names: tuple = (
         'tracking[coxa_T1_left]',
@@ -170,45 +171,47 @@ class FlyConfig(BaseEnvConfig):
         'tracking[femur_T3_right]',
         'tracking[tibia_T3_right]',
         'tracking[tarsus_T3_right]',
-        'tracking[claw_T3_right]',)
+        'tracking[claw_T3_right]',
+        )
     
     joint_names: tuple = (
     'coxa_flexion_T1_left',
     'coxa_twist_T1_left',
-    'femur_T1_left',
     'femur_twist_T1_left',
+    'femur_T1_left',
     'tibia_T1_left',
     'tarsus_T1_left',
     'coxa_flexion_T1_right',
-    'oxa_twist_T1_right',
-    'emur_T1_right',
-    'emur_twist_T1_right',
+    'coxa_twist_T1_right',
+    'femur_twist_T1_right',
+    'femur_T1_right',
     'tibia_T1_right',
     'tarsus_T1_right',
     'coxa_flexion_T2_left',
     'coxa_twist_T2_left',
-    'femur_T2_left',
     'femur_twist_T2_left',
+    'femur_T2_left',
     'tibia_T2_left',
     'tarsus_T2_left',
     'coxa_flexion_T2_right',
-    'oxa_twist_T2_right',
-    'emur_T2_right',
-    'emur_twist_T2_right',
+    'coxa_twist_T2_right',
+    'femur_twist_T2_right',
+    'femur_T2_right',
     'tibia_T2_right',
-    'tarsus_T2_righ',
+    'tarsus_T2_right',
     'coxa_flexion_T3_left',
     'coxa_twist_T3_left',
-    'femur_T3_left',
     'femur_twist_T3_left',
+    'femur_T3_left',
     'tibia_T3_left',
     'tarsus_T3_left',
     'coxa_flexion_T3_right',
-    'oxa_twist_T3_right',
-    'emur_T3_right',
-    'emur_twist_T3_right',
+    'coxa_twist_T3_right',
+    'femur_twist_T3_right',
+    'femur_T3_right',
     'tibia_T3_right',
-    'tarsus_T3_rig',)
+    'tarsus_T3_right',
+    )
     center_of_mass: str = 'thorax'
     
 
@@ -219,8 +222,8 @@ class Flybody(BaseEnv):
         
         print(config)
         mj_model = self.sys.mj_model
-        dpath = '/mmfs1/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
-        # dpath = '/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
+        # dpath = '/mmfs1/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
+        dpath = '/home/eabe/Research/MyRepos/dial-mpc/flybody/0.h5'
         ref_clip = ioh5.load(dpath)
         clip = ReferenceClip()
         for key, val in ref_clip.items():
@@ -340,16 +343,16 @@ class Flybody(BaseEnv):
         }
         return State(data, obs, reward, done, metrics, info)
     def make_system(self, config: FlyConfig) -> System:
-        # model_path = ("/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/mo/dels/fruitfly/fruitfly_force_fast.xml")
-        model_path = ("/mmfs1/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
+        model_path = ("/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
+        # model_path = ("/mmfs1/home/eabe/Research/MyRepos/dial-mpc/dial_mpc/models/fruitfly/fruitfly_force_fast.xml")
         # sys = mjcf.load(model_path)
         # sys = sys.tree_replace({"opt.timestep": config.timestep})
         spec = mujoco.MjSpec()
         spec.from_file(model_path)
         thorax = spec.find_body("thorax")
         first_joint = thorax.first_joint()
-        if (config.free_jnt == False) & (first_joint.name == "free"):
-            first_joint.delete()
+        # if (config.free_jnt == False) & (first_joint.name == "free"):
+        first_joint.delete()
         mj_model = spec.compile()
 
         mj_model.opt.solver = {
@@ -368,8 +371,9 @@ class Flybody(BaseEnv):
     def step(self, state: State, action: jp.ndarray) -> State:
         """Runs one timestep of the environment's dynamics."""
         data0 = state.pipeline_state
-        scaled_action = self._action_scale * action
-        data = self.pipeline_step(data0, scaled_action)
+        
+        ctrl = self.act2tau(action, state.pipeline_state)
+        data = self.pipeline_step(data0, ctrl)
 
         info = state.info.copy()
 
@@ -380,16 +384,16 @@ class Flybody(BaseEnv):
         
         pos_distance = 0.0
         pos_reward = 0.0
-        
+                    
         track_joints = self._ref_traj.joints
         joint_distance = jp.sum((data.qpos[self._joint_idxs] - track_joints[cur_frame,self._joint_idxs])** 2) 
         # joint_reward = self._joint_reward_weight * jp.exp(-0.1 * joint_distance)
-        joint_reward = self._joint_reward_weight* jp.exp(-0.5/.8**2  * joint_distance)
+        joint_reward = self._joint_reward_weight * jp.exp(-0.05  * joint_distance)
         info["joint_distance"] = joint_distance
 
         track_angvel = self._ref_traj.joints_velocity
         angvel_distance = jp.sum((data.qvel[self._joint_idxs] - track_angvel[cur_frame,self._joint_idxs])** 2)
-        angvel_reward = self._angvel_reward_weight * jp.exp(-0.005 * angvel_distance)
+        angvel_reward = self._angvel_reward_weight *jp.exp(-0.005 * angvel_distance)
         # angvel_reward = self._angvel_reward_weight * jp.exp(-0.5/53.7801**2 * angvel_distance)
         # angvel_reward = self._angvel_reward_weight* jp.exp(-20 * angvel_distance)
         info["angvel_distance"]
@@ -397,29 +401,29 @@ class Flybody(BaseEnv):
         track_bodypos = self._ref_traj.body_positions
         bodypos_distance = jp.sum((data.xpos[self._body_idxs] - track_bodypos[cur_frame][self._body_idxs]).flatten()** 2)
         # bodypos_reward = self._bodypos_reward_weight * jp.exp(-0.1* bodypos_distance)
-        bodypos_reward = self._bodypos_reward_weight* jp.exp(-50 * bodypos_distance)
+        bodypos_reward = self._bodypos_reward_weight * jp.exp(-250 * bodypos_distance)
         info["bodypos_distance"] = bodypos_distance
         
         ##### z component of end effector position #####
         endeff_distance = jp.sum((data.xpos[self._endeff_idxs,2] - track_bodypos[cur_frame][self._endeff_idxs,2]).flatten()** 2)
-        endeff_reward = self._endeff_reward_weight* jp.exp(-30 * endeff_distance)
+        endeff_reward =  self._endeff_reward_weight * jp.exp(-1500 * endeff_distance)
         info["endeff_distance"] = endeff_distance
 
         track_quat = self._ref_traj.body_quaternions
         quat_distance = jp.sum(self._bounded_quat_dist(data.xquat[self._body_idxs], track_quat[cur_frame,self._body_idxs]) ** 2)
         quat_reward =  self._quat_reward_weight * jp.exp(-0.05 * quat_distance)
+        info["quat_distance"] = quat_distance
         
         min_z, max_z = self._healthy_z_range
         is_healthy = jp.where(data.xpos[self._thorax_idx][2] < min_z, 0.0, 1.0)
         is_healthy = jp.where(data.xpos[self._thorax_idx][2] > max_z, 0.0, is_healthy)
         if self._terminate_when_unhealthy:
-            healthy_reward = self._healthy_reward
+            healthy_reward = self._healthy_reward 
         else:
             healthy_reward = self._healthy_reward * is_healthy
         summed_pos_distance = jp.sum((pos_distance * jp.array([1.0, 1.0, 0.2])) ** 2)
         too_far = jp.where(summed_pos_distance > self._too_far_dist, 1.0, 0.0)
         info["summed_pos_distance"] = summed_pos_distance
-        info["quat_distance"] = quat_distance
         bad_pose = jp.where(joint_distance > self._bad_pose_dist, 1.0, 0.0)
         bad_quat = jp.where(quat_distance > self._bad_quat_dist, 1.0, 0.0)
         ctrl_cost = self._ctrl_cost_weight * jp.sum(jp.square(action))
@@ -484,31 +488,32 @@ class Flybody(BaseEnv):
 
         # Get the relevant slice of the ref_traj
         def f(x):
-            if len(x.shape) != 1:
-                return jax.lax.dynamic_slice_in_dim(
-                    x,
-                    cur_frame + 1,
-                    self._ref_len,
-                )
+            if (not isinstance(x,str)):
+                if (len(x.shape) != 1):
+                    return jax.lax.dynamic_slice_in_dim(
+                        x,
+                        cur_frame + 1,
+                        self._ref_len,
+                    )
             return jp.array([])
 
         ref_traj = jax.tree_util.tree_map(f, self._ref_traj)
 
         # track_pos_local = jax.vmap(
-        #     lambda a, b: math.rotate(a, b), in_axes=(0, None)
+        #     lambda a, b: brax_math.rotate(a, b), in_axes=(0, None)
         # )(
         #     ref_traj.position - data.qpos[:3],
         #     data.qpos[3:7],
         # ).flatten()
 
-        # quat_dist = jax.vmap(
-        #     lambda a, b: math.relative_quat(a, b), in_axes=(None, 0)
-        # )(
-        #     data.qpos[3:7],
-        #     ref_traj.quaternion,
-        # ).flatten()
+        quat_dist = jax.vmap(
+            lambda a, b: math.relative_quat(a, b), in_axes=(None, 0)
+        )(
+            data.xquat[self._body_idxs],
+            ref_traj.body_quaternions[:, self._body_idxs],
+        ).flatten()
 
-        joint_dist = (ref_traj.joints - data.qpos[self._joint_idxs]).flatten()
+        joint_dist = (ref_traj.joints[:,self._joint_idxs] - data.qpos[self._joint_idxs]).flatten()
 
         # TODO test if this works
         body_pos_dist_local = jax.vmap(
@@ -523,11 +528,11 @@ class Flybody(BaseEnv):
             [
                 data.qpos,
                 data.qvel,
-                # data.cinert[1:].ravel(),
-                # data.cvel[1:].ravel(),
-                # data.qfrc_actuator,
+                data.cinert[1:].ravel(),
+                data.cvel[1:].ravel(),
+                data.qfrc_actuator,
                 # track_pos_local,
-                # quat_dist,
+                quat_dist,
                 joint_dist,
                 body_pos_dist_local,
             ]

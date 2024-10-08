@@ -20,7 +20,7 @@ class BaseEnv(PipelineEnv):
         super().__init__(sys, config.backend, n_frames, config.debug)
 
         # joint limit definitions
-        self.physical_joint_range = self.sys.jnt_range[1:]
+        self.physical_joint_range = self.sys.jnt_range#[1:]
         self.joint_range = self.physical_joint_range
         self.joint_torque_range = self.sys.actuator_ctrlrange
 
@@ -53,9 +53,11 @@ class BaseEnv(PipelineEnv):
     def act2tau(self, act: jax.Array, pipline_state) -> jax.Array:
         joint_target = self.act2joint(act)
 
-        q = pipline_state.qpos[7:]
+        # q = pipline_state.qpos[7:]
+        q = pipline_state.qpos
         q = q[: len(joint_target)]
-        qd = pipline_state.qvel[6:]
+        # qd = pipline_state.qvel[6:]
+        qd = pipline_state.qvel
         qd = qd[: len(joint_target)]
         q_err = joint_target - q
         tau = self._config.kp * q_err - self._config.kd * qd
